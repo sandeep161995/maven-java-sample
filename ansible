@@ -1,0 +1,1172 @@
+ - name: second
+      hosts: webservers
+      vars:
+         - item:
+               - gcc
+               - wget
+      tasks:
+          - name: installing
+            apt:  name= "{{ item }}" state=latest
+
+...
+
+
+
+
+
+---
+# tasks file for mongorole
+   - name: mongorole
+     become: True
+     become_method: sudo
+     tasks:
+        - name: install mongo
+          apt:
+             name: mongodB
+             state: present
+
+
+        - name: start and enable
+          service:
+             name: mongodB
+             state: started
+             enabled: yes
+
+        - name: allow connections
+          lineinfile:
+             path: /etc/ansible/mongodB.cfg
+             regexp: '^#?bind_ip=
+          notify: restart mongo
+
+         - name: install
+           apt:
+             name: pip
+             state: present
+
+        - name: pymongo
+          pip:
+             name: pymongo
+             state: present
+
+...
+
+login as: ubuntu
+Authenticating with public key "newkeyec2"
+Welcome to Ubuntu 20.04.3 LTS (GNU/Linux 5.13.0-1022-aws x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+  System information as of Thu May  5 08:16:01 UTC 2022
+
+  System load:  0.0               Processes:                110
+  Usage of /:   43.2% of 7.69GB   Users logged in:          1
+  Memory usage: 26%               IPv4 address for docker0: 172.17.0.1
+  Swap usage:   0%                IPv4 address for eth0:    172.31.29.252
+
+ * Ubuntu Pro delivers the most comprehensive open source security and
+   compliance features.
+
+   https://ubuntu.com/aws/pro
+
+50 updates can be applied immediately.
+3 of these updates are standard security updates.
+To see these additional updates run: apt list --upgradable
+
+
+Last login: Thu May  5 07:51:13 2022 from 54.89.126.26
+ubuntu@ip-172-31-29-252:~$ sudo  apt-get  update
+Hit:1 http://us-east-1.ec2.archive.ubuntu.com/ubuntu focal InRelease
+Hit:2 http://us-east-1.ec2.archive.ubuntu.com/ubuntu focal-updates InRelease
+Hit:3 http://us-east-1.ec2.archive.ubuntu.com/ubuntu focal-backports InRelease
+Ign:4 https://pkg.jenkins.io/debian-stable binary/ InRelease
+Hit:5 https://pkg.jenkins.io/debian-stable binary/ Release
+Get:6 http://security.ubuntu.com/ubuntu focal-security InRelease [114 kB]
+Fetched 114 kB in 0s (231 kB/s)
+Reading package lists... Done
+ubuntu@ip-172-31-29-252:~$ ansible-inventory --list
+{
+    "_meta": {
+        "hostvars": {}
+    },
+    "all": {
+        "children": [
+            "ungrouped",
+            "webservers"
+        ]
+    },
+    "webservers": {
+        "hosts": [
+            "34.207.111.51",
+            "54.234.21.185",
+            "54.89.126.26",
+            "54.91.215.116"
+        ]
+    }
+}
+ubuntu@ip-172-31-29-252:~$ ansible-inventory -i inventory_custom --list
+[WARNING]: Unable to parse /home/ubuntu/inventory_custom as an inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+{
+    "_meta": {
+        "hostvars": {}
+    },
+    "all": {
+        "children": [
+            "ungrouped"
+        ]
+    }
+}
+ubuntu@ip-172-31-29-252:~$  pwd
+/home/ubuntu
+ubuntu@ip-172-31-29-252:~$ ls
+index.html  playbooks
+ubuntu@ip-172-31-29-252:~$ cd /etc/ansible
+ubuntu@ip-172-31-29-252:/etc/ansible$ ls
+ansible.cfg  hosts  inventory_custom
+ubuntu@ip-172-31-29-252:/etc/ansible$ ansible-inventory -i inventory_custom --list
+{
+    "_meta": {
+        "hostvars": {}
+    },
+    "all": {
+        "children": [
+            "serversm",
+            "ungrouped"
+        ]
+    },
+    "serversm": {
+        "hosts": [
+            "54.89.126.26"
+        ]
+    }
+}
+ubuntu@ip-172-31-29-252:/etc/ansible$ sudo nano ansible.cfg
+ubuntu@ip-172-31-29-252:/etc/ansible$ ansible -i inventory_custom serversm -m ping
+[DEPRECATION WARNING]: Distribution Ubuntu 20.04 on host 54.89.126.26 should
+use /usr/bin/python3, but is using /usr/bin/python for backward compatibility
+with prior Ansible releases. A future Ansible release will default to using the
+ discovered platform python for this host. See https://docs.ansible.com/ansible
+/2.9/reference_appendices/interpreter_discovery.html for more information. This
+ feature will be removed in version 2.12. Deprecation warnings can be disabled
+by setting deprecation_warnings=False in ansible.cfg.
+54.89.126.26 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+ubuntu@ip-172-31-29-252:/etc/ansible$ sudo nano ansible.cfg                     ubuntu@ip-172-31-29-252:/etc/ansible$ ansible  serversm -m ping                 [WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+[WARNING]: Could not match supplied host pattern, ignoring: serversm
+ubuntu@ip-172-31-29-252:/etc/ansible$ ansible  serversm -m ping all
+usage: ansible [-h] [--version] [-v] [-b] [--become-method BECOME_METHOD]
+               [--become-user BECOME_USER] [-K] [-i INVENTORY] [--list-hosts]
+               [-l SUBSET] [-P POLL_INTERVAL] [-B SECONDS] [-o] [-t TREE] [-k]
+               [--private-key PRIVATE_KEY_FILE] [-u REMOTE_USER]
+               [-c CONNECTION] [-T TIMEOUT]
+               [--ssh-common-args SSH_COMMON_ARGS]
+               [--sftp-extra-args SFTP_EXTRA_ARGS]
+               [--scp-extra-args SCP_EXTRA_ARGS]
+               [--ssh-extra-args SSH_EXTRA_ARGS] [-C] [--syntax-check] [-D]
+               [-e EXTRA_VARS] [--vault-id VAULT_IDS]
+               [--ask-vault-pass | --vault-password-file VAULT_PASSWORD_FILES]
+               [-f FORKS] [-M MODULE_PATH] [--playbook-dir BASEDIR]
+               [-a MODULE_ARGS] [-m MODULE_NAME]
+               pattern
+ansible: error: unrecognized arguments: all
+ubuntu@ip-172-31-29-252:/etc/ansible$ ansible  serversm -m ping
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+[WARNING]: Could not match supplied host pattern, ignoring: serversm
+ubuntu@ip-172-31-29-252:/etc/ansible$ sudo nano inventory_custom
+ubuntu@ip-172-31-29-252:/etc/ansible$ ansible  serversm -m ping
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+[WARNING]: Could not match supplied host pattern, ignoring: serversm
+ubuntu@ip-172-31-29-252:/etc/ansible$ ansible  serversm -m ping -c local
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+[WARNING]: Could not match supplied host pattern, ignoring: serversm
+ubuntu@ip-172-31-29-252:/etc/ansible$ cd ..
+ubuntu@ip-172-31-29-252:/etc$ cd ..
+ubuntu@ip-172-31-29-252:/$ cp /etc/ansible/hosts
+cp: missing destination file operand after '/etc/ansible/hosts'
+Try 'cp --help' for more information.
+ubuntu@ip-172-31-29-252:/$ cp /etc/ansible/hosts /home/ubuntu
+ubuntu@ip-172-31-29-252:/$ ls
+bin   dev  home  lib32  libx32      media  opt   root  sbin  srv  tmp  var
+boot  etc  lib   lib64  lost+found  mnt    proc  run   snap  sys  usr
+ubuntu@ip-172-31-29-252:/$ cd /home/ubuntu
+ubuntu@ip-172-31-29-252:~$ ls
+hosts  index.html  playbooks
+ubuntu@ip-172-31-29-252:~$ ansible all -m ping
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+ubuntu@ip-172-31-29-252:~$ ansible all -i hosts -m ping
+[DEPRECATION WARNING]: Distribution Ubuntu 20.04 on host 54.234.21.185 should
+use /usr/bin/python3, but is using /usr/bin/python for backward compatibility
+with prior Ansible releases. A future Ansible release will default to using the
+ discovered platform python for this host. See https://docs.ansible.com/ansible
+/2.9/reference_appendices/interpreter_discovery.html for more information. This
+ feature will be removed in version 2.12. Deprecation warnings can be disabled
+by setting deprecation_warnings=False in ansible.cfg.
+54.234.21.185 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+[DEPRECATION WARNING]: Distribution Ubuntu 20.04 on host 54.89.126.26 should
+use /usr/bin/python3, but is using /usr/bin/python for backward compatibility
+with prior Ansible releases. A future Ansible release will default to using the
+ discovered platform python for this host. See https://docs.ansible.com/ansible
+/2.9/reference_appendices/interpreter_discovery.html for more information. This
+ feature will be removed in version 2.12. Deprecation warnings can be disabled
+by setting deprecation_warnings=False in ansible.cfg.
+54.89.126.26 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+34.207.111.51 | UNREACHABLE! => {
+    "changed": false,
+    "msg": "Failed to connect to the host via ssh: ssh: connect to host 34.207.111.51 port 22: Connection timed out",
+    "unreachable": true
+}
+54.91.215.116 | UNREACHABLE! => {
+    "changed": false,
+    "msg": "Failed to connect to the host via ssh: ssh: connect to host 54.91.215.116 port 22: Connection timed out",
+    "unreachable": true
+}
+ubuntu@ip-172-31-29-252:~$ ls
+hosts  index.html  playbooks
+ubuntu@ip-172-31-29-252:~$ cd playbooks
+ubuntu@ip-172-31-29-252:~/playbooks$ ls
+roles  second.yml  test.yml  third.yml
+ubuntu@ip-172-31-29-252:~/playbooks$ cd roles
+ubuntu@ip-172-31-29-252:~/playbooks/roles$ ls
+w
+ubuntu@ip-172-31-29-252:~/playbooks/roles$ ansible-galaxy init mongorole
+- Role mongorole was created successfully
+ubuntu@ip-172-31-29-252:~/playbooks/roles$ tree mongorole
+mongorole
+├── README.md
+├── defaults
+│   └── main.yml
+├── files
+├── handlers
+│   └── main.yml
+├── meta
+│   └── main.yml
+├── tasks
+│   └── main.yml
+├── templates
+├── tests
+│   ├── inventory
+│   └── test.yml
+└── vars
+    └── main.yml
+
+8 directories, 8 files
+ubuntu@ip-172-31-29-252:~/playbooks/roles$ cd /mongorole/tasks
+-bash: cd: /mongorole/tasks: No such file or directory
+ubuntu@ip-172-31-29-252:~/playbooks/roles$ cd mongorole
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole$ cd tasks
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole/tasks$ nano main.yml
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole/tasks$ cd ..
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole$ cd handlers
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole/handlers$ nano main.yml
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole/handlers$ cd ..
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole$ cd ..
+ubuntu@ip-172-31-29-252:~/playbooks/roles$ cd ..
+ubuntu@ip-172-31-29-252:~/playbooks$ nano fouth.yml
+ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook fouth.yml --syntax-check
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+ERROR! A malformed role declaration was encountered.
+
+The error appears to be in '/home/ubuntu/playbooks/fouth.yml': line 2, column 6, but may
+be elsewhere in the file depending on the exact syntax problem.
+
+The offending line appears to be:
+
+---
+   - name: fouth
+     ^ here
+ubuntu@ip-172-31-29-252:~/playbooks$ nano fouth.yml
+ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook fouth.yml --syntax-check
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+ERROR! Syntax Error while loading YAML.
+  mapping values are not allowed in this context
+
+The error appears to be in '/home/ubuntu/playbooks/fouth.yml': line 3, column 10, but may
+be elsewhere in the file depending on the exact syntax problem.
+
+The offending line appears to be:
+
+   - hosts:webservers
+     name: fouth
+         ^ here
+ubuntu@ip-172-31-29-252:~/playbooks$ nano fouth.yml
+ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook fouth.yml --syntax-check
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+ERROR! A malformed role declaration was encountered.
+
+The error appears to be in '/home/ubuntu/playbooks/fouth.yml': line 2, column 6, but may
+be elsewhere in the file depending on the exact syntax problem.
+
+The offending line appears to be:
+
+---
+   - name: fouth
+     ^ here
+ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook fouth.yml --syntax-check
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+ERROR! A malformed role declaration was encountered.
+
+The error appears to be in '/home/ubuntu/playbooks/fouth.yml': line 2, column 6, but may
+be elsewhere in the file depending on the exact syntax problem.
+
+The offending line appears to be:
+
+---
+   - name: fouth
+     ^ here
+ubuntu@ip-172-31-29-252:~/playbooks$ nano fouth.yml
+ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook fouth.yml --syntax-check
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+ERROR! A malformed role declaration was encountered.
+
+The error appears to be in '/home/ubuntu/playbooks/fouth.yml': line 2, column 7, but may
+be elsewhere in the file depending on the exact syntax problem.
+
+The offending line appears to be:
+
+---
+    - name: fouth
+      ^ here
+ubuntu@ip-172-31-29-252:~/playbooks$ nano fouth.yml
+ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook fouth.yml --syntax-check
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+ERROR! A malformed role declaration was encountered.
+
+The error appears to be in '/home/ubuntu/playbooks/fouth.yml': line 3, column 7, but may
+be elsewhere in the file depending on the exact syntax problem.
+
+The offending line appears to be:
+
+
+    - hosts: webservers
+      ^ here
+ubuntu@ip-172-31-29-252:~/playbooks$ nano fouth.yml
+ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook fouth.yml --syntax-check
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+ERROR! A malformed role declaration was encountered.
+
+The error appears to be in '/home/ubuntu/playbooks/fouth.yml': line 2, column 8, but may
+be elsewhere in the file depending on the exact syntax problem.
+
+The offending line appears to be:
+
+---
+    -  hosts: webservers
+       ^ here
+ubuntu@ip-172-31-29-252:~/playbooks$ nano fouth.yml
+ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook fouth.yml --syntax-check
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+[WARNING]: Could not match supplied host pattern, ignoring: webservers
+
+playbook: fouth.yml
+ubuntu@ip-172-31-29-252:~/playbooks$ nano fouth.yml
+ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook fouth.yml --syntax-check
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+[WARNING]: Could not match supplied host pattern, ignoring: webservers
+
+playbook: fouth.yml
+ubuntu@ip-172-31-29-252:~/playbooks$ nano fouth.yml
+ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook fouth.yml --syntax-check
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+ERROR! A malformed role declaration was encountered.
+
+The error appears to be in '/home/ubuntu/playbooks/fouth.yml': line 2, column 7, but may
+be elsewhere in the file depending on the exact syntax problem.
+
+The offending line appears to be:
+
+---
+    - name: fouth
+      ^ here
+ubuntu@ip-172-31-29-252:~/playbooks$ nano fouth.yml
+ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook fouth.yml --syntax-check
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+ERROR! 'role' is not a valid attribute for a Play
+
+The error appears to be in '/home/ubuntu/playbooks/fouth.yml': line 2, column 7, but may
+be elsewhere in the file depending on the exact syntax problem.
+
+The offending line appears to be:
+
+---
+    - name: fouth
+      ^ here
+ubuntu@ip-172-31-29-252:~/playbooks$ nano fouth.yml
+ubuntu@ip-172-31-29-252:~/playbooks$ ls
+fouth.yml  roles  second.yml  test.yml  third.yml
+ubuntu@ip-172-31-29-252:~/playbooks$ cd roles
+ubuntu@ip-172-31-29-252:~/playbooks/roles$ ls
+mongorole  w
+ubuntu@ip-172-31-29-252:~/playbooks/roles$ nano fouth.yml
+ubuntu@ip-172-31-29-252:~/playbooks/roles$ cd tasks
+-bash: cd: tasks: No such file or directory
+ubuntu@ip-172-31-29-252:~/playbooks/roles$ nano main.yml                        ubuntu@ip-172-31-29-252:~/playbooks/roles$ cd tasks
+-bash: cd: tasks: No such file or directory
+ubuntu@ip-172-31-29-252:~/playbooks/roles$ cd mongorole
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole$ cd tasks
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole/tasks$ nano main.yml
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole/tasks$ cd ..
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole$ cd ..
+ubuntu@ip-172-31-29-252:~/playbooks/roles$ cd ..
+ubuntu@ip-172-31-29-252:~/playbooks$ nano fouth.yml
+ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook fouth.yml --syntax-check
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+ERROR! A malformed role declaration was encountered.
+
+The error appears to be in '/home/ubuntu/playbooks/fouth.yml': line 2, column 7, but may
+be elsewhere in the file depending on the exact syntax problem.
+
+The offending line appears to be:
+
+---
+    - name: fouth
+      ^ here
+ubuntu@ip-172-31-29-252:~/playbooks$ nano fouth.yml
+ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook fouth.yml --syntax-check
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+ERROR! A malformed role declaration was encountered.
+
+The error appears to be in '/home/ubuntu/playbooks/fouth.yml': line 2, column 7, but may
+be elsewhere in the file depending on the exact syntax problem.
+
+The offending line appears to be:
+
+---
+    - name: fouth
+      ^ here
+ubuntu@ip-172-31-29-252:~/playbooks$ nano testing.yml
+ubuntu@ip-172-31-29-252:~/playbooks$ cd roles
+ubuntu@ip-172-31-29-252:~/playbooks/roles$ cd mongorolr
+-bash: cd: mongorolr: No such file or directory
+ubuntu@ip-172-31-29-252:~/playbooks/roles$ cd mongorole
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole$ cd tasks
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole/tasks$ nano main.yml
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole/tasks$ cd ..
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole$ cd ..
+ubuntu@ip-172-31-29-252:~/playbooks/roles$ cd ..
+ubuntu@ip-172-31-29-252:~/playbooks$ nano testing.yml
+ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook testing.yml --syntax-check
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+ERROR! Syntax Error while loading YAML.
+  found unexpected document indicator
+
+The error appears to be in '/home/ubuntu/playbooks/testing.yml': line 35, column 1, but may
+be elsewhere in the file depending on the exact syntax problem.
+
+The offending line appears to be:
+
+
+...
+^ here
+ubuntu@ip-172-31-29-252:~/playbooks$ nano testing.yml                           ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook testing.yml --syntax-check
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+ERROR! Syntax Error while loading YAML.
+  found unexpected document indicator
+
+The error appears to be in '/home/ubuntu/playbooks/testing.yml': line 37, column 1, but may
+be elsewhere in the file depending on the exact syntax problem.
+
+The offending line appears to be:
+
+
+...
+^ here
+ubuntu@ip-172-31-29-252:~/playbooks$ nano testing.yml                           ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook testing.yml --syntax-check
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+[WARNING]: While constructing a mapping from
+/home/ubuntu/playbooks/testing.yml, line 7, column 11, found a duplicate dict
+key (name). Using last defined value only.
+[WARNING]: While constructing a mapping from
+/home/ubuntu/playbooks/testing.yml, line 7, column 11, found a duplicate dict
+key (apt). Using last defined value only.
+ERROR! conflicting action statements: apt, service
+
+The error appears to be in '/home/ubuntu/playbooks/testing.yml': line 7, column 11, but may
+be elsewhere in the file depending on the exact syntax problem.
+
+The offending line appears to be:
+
+     tasks:
+        - name: install mongo
+          ^ here
+ubuntu@ip-172-31-29-252:~/playbooks$ nano testing.yml                           ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook testing.yml --syntax-check
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+[WARNING]: While constructing a mapping from
+/home/ubuntu/playbooks/testing.yml, line 7, column 12, found a duplicate dict
+key (name). Using last defined value only.
+[WARNING]: While constructing a mapping from
+/home/ubuntu/playbooks/testing.yml, line 7, column 12, found a duplicate dict
+key (apt). Using last defined value only.
+ERROR! conflicting action statements: apt, service
+
+The error appears to be in '/home/ubuntu/playbooks/testing.yml': line 7, column 12, but may
+be elsewhere in the file depending on the exact syntax problem.
+
+The offending line appears to be:
+
+      tasks:
+         - name: install
+           ^ here
+ubuntu@ip-172-31-29-252:~/playbooks$ nano testing.yml                           ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook testing.yml --syntax-check
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+[WARNING]: While constructing a mapping from
+/home/ubuntu/playbooks/testing.yml, line 7, column 12, found a duplicate dict
+key (name). Using last defined value only.
+[WARNING]: While constructing a mapping from
+/home/ubuntu/playbooks/testing.yml, line 7, column 12, found a duplicate dict
+key (apt). Using last defined value only.
+ERROR! conflicting action statements: apt, service
+
+The error appears to be in '/home/ubuntu/playbooks/testing.yml': line 7, column 12, but may
+be elsewhere in the file depending on the exact syntax problem.
+
+The offending line appears to be:
+
+      tasks:
+         - name: install
+           ^ here
+ubuntu@ip-172-31-29-252:~/playbooks$ nano testing.yml                           ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook testing.yml --syntax-check
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+[WARNING]: While constructing a mapping from
+/home/ubuntu/playbooks/testing.yml, line 7, column 12, found a duplicate dict
+key (name). Using last defined value only.
+[WARNING]: While constructing a mapping from
+/home/ubuntu/playbooks/testing.yml, line 7, column 12, found a duplicate dict
+key (apt). Using last defined value only.
+ERROR! conflicting action statements: apt, pip
+
+The error appears to be in '/home/ubuntu/playbooks/testing.yml': line 7, column 12, but may
+be elsewhere in the file depending on the exact syntax problem.
+
+The offending line appears to be:
+
+      tasks:
+         - name: install
+           ^ here
+ubuntu@ip-172-31-29-252:~/playbooks$ nano testing.yml                           ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook testing.yml --syntax-check
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+[WARNING]: While constructing a mapping from
+/home/ubuntu/playbooks/testing.yml, line 7, column 12, found a duplicate dict
+key (name). Using last defined value only.
+[WARNING]: While constructing a mapping from
+/home/ubuntu/playbooks/testing.yml, line 7, column 12, found a duplicate dict
+key (apt). Using last defined value only.
+ERROR! conflicting action statements: apt, pip
+
+The error appears to be in '/home/ubuntu/playbooks/testing.yml': line 7, column 12, but may
+be elsewhere in the file depending on the exact syntax problem.
+
+The offending line appears to be:
+
+      tasks:
+         - name: install
+           ^ here
+ubuntu@ip-172-31-29-252:~/playbooks$ nano testing.yml                           ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook testing.yml --syntax-check
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+ERROR! the field 'hosts' is required but was not set
+ubuntu@ip-172-31-29-252:~/playbooks$ nano testing.yml                           ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook testing.yml --syntax-check
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+ERROR! the field 'hosts' is required but was not set
+ubuntu@ip-172-31-29-252:~/playbooks$ nano testing.yml                           ubuntu@ip-172-31-29-252:~/playbooks$ cat testing.yml
+---
+# tasks file for mongorole
+    - name: testing
+      become: True
+      become_method: sudo
+      tasks:
+         - name: install
+           apt:
+              name: mongodb
+              state: present
+
+
+         - name: start and enable
+           service:
+             name: mongodB
+             state: started
+             enabled: yes
+
+
+         - name: " install a apt"
+           apt:
+              name: pip
+              state: present
+
+         - name: "install pymongo"
+           pip:
+              name: pymongo
+              state: present
+
+
+
+...
+
+ubuntu@ip-172-31-29-252:~/playbooks$ cd roles
+ubuntu@ip-172-31-29-252:~/playbooks/roles$ cd mongorole
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole$ cd tasks
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole/tasks$ nano main.yml
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole/tasks$ nano main.yml
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole/tasks$ nano main.yml
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole/tasks$ cd ..
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole$ cd handlers
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole/handlers$ nano main.yml
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole/handlers$ cd ..
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole$ cd tasks
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole/tasks$ nano main.yml
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole/tasks$ cd ..
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole$ cd ..
+ubuntu@ip-172-31-29-252:~/playbooks/roles$ cd ..
+ubuntu@ip-172-31-29-252:~/playbooks$ nano testing.yml
+ubuntu@ip-172-31-29-252:~/playbooks$ nano fouth.yml
+ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook fouth.yml --syntax-check
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+ERROR! A malformed role declaration was encountered.
+
+The error appears to be in '/home/ubuntu/playbooks/fouth.yml': line 2, column 7, but may
+be elsewhere in the file depending on the exact syntax problem.
+
+The offending line appears to be:
+
+---
+    - name: fouth
+      ^ here
+ubuntu@ip-172-31-29-252:~/playbooks$ nano fouth.yml
+ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook fouth.yml --syntax-check
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+ERROR! unexpected parameter type in action: <class 'ansible.parsing.yaml.objects.AnsibleSequence'>
+
+The error appears to be in '/home/ubuntu/playbooks/roles/mongorole/tasks/main.yml': line 3, column 7, but may
+be elsewhere in the file depending on the exact syntax problem.
+
+The offending line appears to be:
+
+# tasks file for mongorole
+    - name: mongorole
+      ^ here
+ubuntu@ip-172-31-29-252:~/playbooks$ cd roles
+ubuntu@ip-172-31-29-252:~/playbooks/roles$ cd mongorole
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole$ cd tasks
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole/tasks$ nano main.yml
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole/tasks$ cd ..
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole$ cd ..
+ubuntu@ip-172-31-29-252:~/playbooks/roles$ cd ..
+ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook fouth.yml --syntax-check
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+ERROR! unexpected parameter type in action: <class 'ansible.parsing.yaml.objects.AnsibleSequence'>
+
+The error appears to be in '/home/ubuntu/playbooks/roles/mongorole/tasks/main.yml': line 3, column 7, but may
+be elsewhere in the file depending on the exact syntax problem.
+
+The offending line appears to be:
+
+# tasks file for mongorole
+    - become: True
+      ^ here
+ubuntu@ip-172-31-29-252:~/playbooks$ cd roles
+ubuntu@ip-172-31-29-252:~/playbooks/roles$ cd mongorole
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole$ cd tasks
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole/tasks$ nano main.yml
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole/tasks$ cd ..
+ubuntu@ip-172-31-29-252:~/playbooks/roles/mongorole$ cd ..
+ubuntu@ip-172-31-29-252:~/playbooks/roles$ cd ..
+ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook fouth.yml --syntax-check
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+[WARNING]: Could not match supplied host pattern, ignoring: webservers
+
+playbook: fouth.yml
+ubuntu@ip-172-31-29-252:~/playbooks$ nano fouth.yml
+ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook fouth.yml --syntax-check
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+[WARNING]: Could not match supplied host pattern, ignoring: webservers
+
+playbook: fouth.yml
+ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook fouth.yml
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+[WARNING]: Could not match supplied host pattern, ignoring: webservers
+
+PLAY [fouth] *******************************************************************
+skipping: no hosts matched
+
+PLAY RECAP *********************************************************************
+
+ubuntu@ip-172-31-29-252:~/playbooks$ cd /etc/ansible
+ubuntu@ip-172-31-29-252:/etc/ansible$ cat hosts
+# This is the default ansible 'hosts' file.
+#
+# It should live in /etc/ansible/hosts
+#
+#   - Comments begin with the '#' character
+#   - Blank lines are ignored
+#   - Groups of hosts are delimited by [header] elements
+#   - You can enter hostnames or ip addresses
+#   - A hostname/ip can be a member of multiple groups
+
+# Ex 1: Ungrouped hosts, specify before any group headers.
+
+#green.example.com
+#blue.example.com
+#192.168.100.1
+#192.168.100.10
+
+# Ex 2: A collection of hosts belonging to the 'webservers' group
+
+#[webservers]
+#alpha.example.org
+#beta.example.org
+#192.168.1.100
+#192.168.1.110
+
+# If you have multiple hosts following a pattern you can specify
+# them like this:
+
+#www[001:006].example.com
+
+# Ex 3: A collection of database servers in the 'dbservers' group
+
+#[dbservers]
+#
+#db01.intranet.mydomain.net
+#db02.intranet.mydomain.net
+#10.25.1.56
+#10.25.1.57
+
+# Here's another example of host ranges, this time there are no
+# leading 0s:
+
+#db-[99:101]-node.example.com
+[webservers]
+ 34.207.111.51
+54.91.215.116
+54.89.126.26
+54.234.21.185
+
+
+
+
+
+
+ubuntu@ip-172-31-29-252:/etc/ansible$ ansible webservers - m ping
+usage: ansible [-h] [--version] [-v] [-b] [--become-method BECOME_METHOD]
+               [--become-user BECOME_USER] [-K] [-i INVENTORY] [--list-hosts]
+               [-l SUBSET] [-P POLL_INTERVAL] [-B SECONDS] [-o] [-t TREE] [-k]
+               [--private-key PRIVATE_KEY_FILE] [-u REMOTE_USER]
+               [-c CONNECTION] [-T TIMEOUT]
+               [--ssh-common-args SSH_COMMON_ARGS]
+               [--sftp-extra-args SFTP_EXTRA_ARGS]
+               [--scp-extra-args SCP_EXTRA_ARGS]
+               [--ssh-extra-args SSH_EXTRA_ARGS] [-C] [--syntax-check] [-D]
+               [-e EXTRA_VARS] [--vault-id VAULT_IDS]
+               [--ask-vault-pass | --vault-password-file VAULT_PASSWORD_FILES]
+               [-f FORKS] [-M MODULE_PATH] [--playbook-dir BASEDIR]
+               [-a MODULE_ARGS] [-m MODULE_NAME]
+               pattern
+ansible: error: unrecognized arguments: - m ping
+ubuntu@ip-172-31-29-252:/etc/ansible$ ansible all - m ping
+usage: ansible [-h] [--version] [-v] [-b] [--become-method BECOME_METHOD]
+               [--become-user BECOME_USER] [-K] [-i INVENTORY] [--list-hosts]
+               [-l SUBSET] [-P POLL_INTERVAL] [-B SECONDS] [-o] [-t TREE] [-k]
+               [--private-key PRIVATE_KEY_FILE] [-u REMOTE_USER]
+               [-c CONNECTION] [-T TIMEOUT]
+               [--ssh-common-args SSH_COMMON_ARGS]
+               [--sftp-extra-args SFTP_EXTRA_ARGS]
+               [--scp-extra-args SCP_EXTRA_ARGS]
+               [--ssh-extra-args SSH_EXTRA_ARGS] [-C] [--syntax-check] [-D]
+               [-e EXTRA_VARS] [--vault-id VAULT_IDS]
+               [--ask-vault-pass | --vault-password-file VAULT_PASSWORD_FILES]
+               [-f FORKS] [-M MODULE_PATH] [--playbook-dir BASEDIR]
+               [-a MODULE_ARGS] [-m MODULE_NAME]
+               pattern
+ansible: error: unrecognized arguments: - m ping
+ubuntu@ip-172-31-29-252:/etc/ansible$ ansible all -m ping
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+ubuntu@ip-172-31-29-252:/etc/ansible$ pwd
+/etc/ansible
+ubuntu@ip-172-31-29-252:/etc/ansible$ cd ..
+ubuntu@ip-172-31-29-252:/etc$ cd ..
+ubuntu@ip-172-31-29-252:/$ pwd
+/
+ubuntu@ip-172-31-29-252:/$ ls
+bin   dev  home  lib32  libx32      media  opt   root  sbin  srv  tmp  var
+boot  etc  lib   lib64  lost+found  mnt    proc  run   snap  sys  usr
+ubuntu@ip-172-31-29-252:/$ cd /home
+ubuntu@ip-172-31-29-252:/home$ cd /ubuntu
+-bash: cd: /ubuntu: No such file or directory
+ubuntu@ip-172-31-29-252:/home$ ls
+ubuntu
+ubuntu@ip-172-31-29-252:/home$ cd ubuntu
+ubuntu@ip-172-31-29-252:~$ ls
+hosts  index.html  playbooks
+ubuntu@ip-172-31-29-252:~$ ansible webservers -m ping
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+[WARNING]: Could not match supplied host pattern, ignoring: webservers
+ubuntu@ip-172-31-29-252:~$ ansible -i hosts  webservers -m ping
+[DEPRECATION WARNING]: Distribution Ubuntu 20.04 on host 54.234.21.185 should
+use /usr/bin/python3, but is using /usr/bin/python for backward compatibility
+with prior Ansible releases. A future Ansible release will default to using the
+ discovered platform python for this host. See https://docs.ansible.com/ansible
+/2.9/reference_appendices/interpreter_discovery.html for more information. This
+ feature will be removed in version 2.12. Deprecation warnings can be disabled
+by setting deprecation_warnings=False in ansible.cfg.
+54.234.21.185 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+[DEPRECATION WARNING]: Distribution Ubuntu 20.04 on host 54.89.126.26 should
+use /usr/bin/python3, but is using /usr/bin/python for backward compatibility
+with prior Ansible releases. A future Ansible release will default to using the
+ discovered platform python for this host. See https://docs.ansible.com/ansible
+/2.9/reference_appendices/interpreter_discovery.html for more information. This
+ feature will be removed in version 2.12. Deprecation warnings can be disabled
+by setting deprecation_warnings=False in ansible.cfg.
+54.89.126.26 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+34.207.111.51 | UNREACHABLE! => {
+    "changed": false,
+    "msg": "Failed to connect to the host via ssh: ssh: connect to host 34.207.111.51 port 22: Connection timed out",
+    "unreachable": true
+}
+54.91.215.116 | UNREACHABLE! => {
+    "changed": false,
+    "msg": "Failed to connect to the host via ssh: ssh: connect to host 54.91.215.116 port 22: Connection timed out",
+    "unreachable": true
+}
+ubuntu@ip-172-31-29-252:~$ cd playbooks
+ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook fouth.yml
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+[WARNING]: Could not match supplied host pattern, ignoring: webservers
+
+PLAY [fouth] *******************************************************************
+skipping: no hosts matched
+
+PLAY RECAP *********************************************************************
+
+ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook -i hosts fouth.yml
+[WARNING]: Unable to parse /home/ubuntu/playbooks/hosts as an inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+[WARNING]: Could not match supplied host pattern, ignoring: webservers
+
+PLAY [fouth] *******************************************************************
+skipping: no hosts matched
+
+PLAY RECAP *********************************************************************
+
+ubuntu@ip-172-31-29-252:~/playbooks$ ansible webservers -m ping
+[WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+[WARNING]: Could not match supplied host pattern, ignoring: webservers
+ubuntu@ip-172-31-29-252:~/playbooks$ cp /home/ubuntu/hosts /home/ubuntu/playbooks/
+ubuntu@ip-172-31-29-252:~/playbooks$ ls
+fouth.yml  hosts  roles  second.yml  test.yml  testing.yml  third.yml
+ubuntu@ip-172-31-29-252:~/playbooks$ ansible webservers -m ping                 [WARNING]: Unable to parse /home/ubuntu/etc/ansible/inventory_custom as an
+inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+[WARNING]: Could not match supplied host pattern, ignoring: webservers
+ubuntu@ip-172-31-29-252:~/playbooks$ cat hosts
+# This is the default ansible 'hosts' file.
+#
+# It should live in /etc/ansible/hosts
+#
+#   - Comments begin with the '#' character
+#   - Blank lines are ignored
+#   - Groups of hosts are delimited by [header] elements
+#   - You can enter hostnames or ip addresses
+#   - A hostname/ip can be a member of multiple groups
+
+# Ex 1: Ungrouped hosts, specify before any group headers.
+
+#green.example.com
+#blue.example.com
+#192.168.100.1
+#192.168.100.10
+
+# Ex 2: A collection of hosts belonging to the 'webservers' group
+
+#[webservers]
+#alpha.example.org
+#beta.example.org
+#192.168.1.100
+#192.168.1.110
+
+# If you have multiple hosts following a pattern you can specify
+# them like this:
+
+#www[001:006].example.com
+
+# Ex 3: A collection of database servers in the 'dbservers' group
+
+#[dbservers]
+#
+#db01.intranet.mydomain.net
+#db02.intranet.mydomain.net
+#10.25.1.56
+#10.25.1.57
+
+# Here's another example of host ranges, this time there are no
+# leading 0s:
+
+#db-[99:101]-node.example.com
+[webservers]
+ 34.207.111.51
+54.91.215.116
+54.89.126.26
+54.234.21.185
+
+
+
+
+
+
+ubuntu@ip-172-31-29-252:~/playbooks$ ansible -i hosts webservers -m ping        [DEPRECATION WARNING]: Distribution Ubuntu 20.04 on host 54.234.21.185 should
+use /usr/bin/python3, but is using /usr/bin/python for backward compatibility
+with prior Ansible releases. A future Ansible release will default to using the
+ discovered platform python for this host. See https://docs.ansible.com/ansible
+/2.9/reference_appendices/interpreter_discovery.html for more information. This
+ feature will be removed in version 2.12. Deprecation warnings can be disabled
+by setting deprecation_warnings=False in ansible.cfg.
+54.234.21.185 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+[DEPRECATION WARNING]: Distribution Ubuntu 20.04 on host 54.89.126.26 should
+use /usr/bin/python3, but is using /usr/bin/python for backward compatibility
+with prior Ansible releases. A future Ansible release will default to using the
+ discovered platform python for this host. See https://docs.ansible.com/ansible
+/2.9/reference_appendices/interpreter_discovery.html for more information. This
+ feature will be removed in version 2.12. Deprecation warnings can be disabled
+by setting deprecation_warnings=False in ansible.cfg.
+54.89.126.26 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+34.207.111.51 | UNREACHABLE! => {
+    "changed": false,
+    "msg": "Failed to connect to the host via ssh: ssh: connect to host 34.207.111.51 port 22: Connection timed out",
+    "unreachable": true
+}
+54.91.215.116 | UNREACHABLE! => {
+    "changed": false,
+    "msg": "Failed to connect to the host via ssh: ssh: connect to host 54.91.215.116 port 22: Connection timed out",
+    "unreachable": true
+}
+ubuntu@ip-172-31-29-252:~/playbooks$ ansible-playbook -i hosts fouth.yml        
+PLAY [fouth] *******************************************************************
+
+TASK [Gathering Facts] *********************************************************
+[DEPRECATION WARNING]: Distribution Ubuntu 20.04 on host 54.234.21.185 should
+use /usr/bin/python3, but is using /usr/bin/python for backward compatibility
+with prior Ansible releases. A future Ansible release will default to using the
+ discovered platform python for this host. See https://docs.ansible.com/ansible
+/2.9/reference_appendices/interpreter_discovery.html for more information. This
+ feature will be removed in version 2.12. Deprecation warnings can be disabled
+by setting deprecation_warnings=False in ansible.cfg.
+ok: [54.234.21.185]
+[DEPRECATION WARNING]: Distribution Ubuntu 20.04 on host 54.89.126.26 should
+use /usr/bin/python3, but is using /usr/bin/python for backward compatibility
+with prior Ansible releases. A future Ansible release will default to using the
+ discovered platform python for this host. See https://docs.ansible.com/ansible
+/2.9/reference_appendices/interpreter_discovery.html for more information. This
+ feature will be removed in version 2.12. Deprecation warnings can be disabled
+by setting deprecation_warnings=False in ansible.cfg.
+ok: [54.89.126.26]
+fatal: [34.207.111.51]: UNREACHABLE! => {"changed": false, "msg": "Failed to connect to the host via ssh: ssh: connect to host 34.207.111.51 port 22: Connection timed out", "unreachable": true}
+fatal: [54.91.215.116]: UNREACHABLE! => {"changed": false, "msg": "Failed to connect to the host via ssh: ssh: connect to host 54.91.215.116 port 22: Connection timed out", "unreachable": true}
+
+TASK [mongorole : install] *****************************************************
+changed: [54.234.21.185]
+changed: [54.89.126.26]
+
+TASK [mongorole : start and enable] ********************************************
+fatal: [54.234.21.185]: FAILED! => {"changed": false, "msg": "Could not find the requested service mongodB: host"}
+fatal: [54.89.126.26]: FAILED! => {"changed": false, "msg": "Could not find the requested service mongodB: host"}
+
+PLAY RECAP *********************************************************************
+34.207.111.51              : ok=0    changed=0    unreachable=1    failed=0    skipped=0    rescued=0    ignored=0
+54.234.21.185              : ok=2    changed=1    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0
+54.89.126.26               : ok=2    changed=1    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0
+54.91.215.116              : ok=0    changed=0    unreachable=1    failed=0    skipped=0    rescued=0    ignored=0
+
+ubuntu@ip-172-31-29-252:~/playbooks$
+exit
